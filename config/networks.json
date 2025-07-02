@@ -1,0 +1,11 @@
+{
+  "localhost": {
+    "rpc_url": "http://127.0.0.1:8545",
+    "chain_id": 31337
+  },
+  "goerli": {
+    "rpc_url": "https://goerli.infura.io/v3/YOUR_INFURA_PROJECT_ID",
+    "chain_id": 5,
+    "etherscan_api_key": "YOUR_ETHERSCAN_API_KEY"
+  }
+}

@@ -1,0 +1,21 @@
+name: Example Deployment Pipeline
+
+jobs:
+  - name: Compile Contracts
+    uses: actions/compile@v1
+    with:
+      tool: hardhat
+
+  - name: Deploy to Localhost
+    uses: actions/deploy@v1
+    with:
+      network: localhost
+      contract: MyContract
+      args: ["Hello from Web3 DevOps!"]
+
+  - name: Verify Contract
+    uses: actions/verify@v1
+    with:
+      network: localhost
+      contract: MyContract
+      address: ${{ jobs.Deploy to Localhost.output.address }}

@@ -1,0 +1,17 @@
+{
+  "name": "web3-devops-contracts",
+  "version": "1.0.0",
+  "description": "Sample contracts for Web3 DevOps Toolkit",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.0"
+  }
+}
