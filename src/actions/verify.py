@@ -1,28 +1,14 @@
 import os
 import json
 import subprocess
-
-def _clean_env(env):
-    # Remove pytest-specific and other volatile environment variables
-    keys_to_remove = [
-        k for k in env if k.startswith('PYTEST_') or k.startswith('TERM_') or k.startswith('SHLVL') or
-        k.startswith('OLDPWD') or k.startswith('PWD') or k.startswith('_') or k.startswith('CONDA_') or
-        k.startswith('HOMEBREW_') or k.startswith('INFOPATH') or k.startswith('DISPLAY') or
-        k.startswith('npm_') or k.startswith('XPC_') or k.startswith('__CF_') or k.startswith('SSH_') or
-        k.startswith('LOGNAME') or k.startswith('USER') or k.startswith('TMPDIR') or k.startswith('SHELL') or
-        k.startswith('INIT_CWD') or k.startswith('NODE') or k.startswith('COLOR') or k.startswith('LANG') or
-        k.startswith('EDITOR') or k.startswith('__CFBundleIdentifier') or
-        k.startswith('OBJC_DISABLE_INITIALIZE_FORK_SAFETY') or k.startswith('__PYVENV_LAUNCHER__') or
-        k.startswith('__VIRTUAL_ENV__') or k.startswith('VIRTUAL_ENV')
-    ]
-    for key in keys_to_remove:
-        env.pop(key, None)
-    return env
+from .common import clean_env as _clean_env, get_contracts_dir
 
 def verify_contract(params, pipeline_path, deployed_contracts, networks_config=None):
     network = params.get('network')
     contract = params.get('contract')
-    address = params.get('address') # This will come from the pipeline output or direct param
+    address = params.get('address')  # This will come from the pipeline output or direct param
+    args = params.get('args', [])
+    contracts_dir = get_contracts_dir(params)
 
     print(f"  [⚙️] Verifying {contract} on {network}...")
 
@@ -58,13 +44,20 @@ def verify_contract(params, pipeline_path, deployed_contracts, networks_config=N
     try:
         # Set Etherscan API key as environment variable for Hardhat
         env = os.environ.copy()
-        env = _clean_env(env) # Clean the environment
+        env = _clean_env(env)  # Clean the environment
         env["ETHERSCAN_API_KEY"] = etherscan_api_key
 
-        # Run npx hardhat verify --network <network> <address>
+        # Run npx hardhat verify --network <network> <address> [args...]
+        cmd = ["npx", "hardhat", "verify", "--network", network, address]
+        if args:
+            if isinstance(args, list):
+                cmd.extend([str(a) for a in args])
+            else:
+                cmd.append(str(args))
+
         result = subprocess.run(
-            ["npx", "hardhat", "verify", "--network", network, address],
-            cwd="/Users/dw2022/web3-devops-toolkit/contracts",
+            cmd,
+            cwd=contracts_dir,
             capture_output=True,
             text=True,
             check=True,

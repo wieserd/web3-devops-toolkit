@@ -1,0 +1,122 @@
+name: Web3 DevOps CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  lint-and-audit:
+    name: Lint & Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'contracts/package-lock.json'
+
+      - name: Install Contract Dependencies
+        working-directory: ./contracts
+        run: npm ci
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Pipeline Syntax & Schema Validation
+        run: |
+          python3 src/cli.py validate-pipeline --pipeline pipelines/example_pipeline.yaml
+
+  test-suite:
+    name: Unit & Contract Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'contracts/package-lock.json'
+
+      - name: Install Contract Dependencies
+        working-directory: ./contracts
+        run: npm ci
+
+      - name: Run Smart Contract Unit Tests
+        working-directory: ./contracts
+        run: npm test
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Toolkit Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run DevOps Toolkit Test Suite
+        run: pytest -v
+
+  e2e-pipeline:
+    name: End-to-End Pipeline Execution
+    needs: [lint-and-audit, test-suite]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'contracts/package-lock.json'
+
+      - name: Install Contract Dependencies
+        working-directory: ./contracts
+        run: npm ci
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Toolkit Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Start Localhost Node in Background
+        working-directory: ./contracts
+        run: |
+          npx hardhat node &
+          sleep 4
+
+      - name: Execute DevOps Pipeline
+        run: |
+          python3 src/cli.py run-pipeline \
+            --pipeline pipelines/example_pipeline.yaml \
+            --manifest deployments/localhost-manifest.json
+
+      - name: Upload Deployment Manifest & Exported ABIs
+        uses: actions/upload-artifact@v4
+        with:
+          name: web3-deployments
+          path: |
+            deployments/
+            exports/

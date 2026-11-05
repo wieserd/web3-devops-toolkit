@@ -6,6 +6,11 @@ jobs:
     with:
       tool: hardhat
 
+  - name: Run Tests
+    uses: actions/test@v1
+    with:
+      tool: hardhat
+
   - name: Deploy to Localhost
     uses: actions/deploy@v1
     with:
@@ -13,9 +18,38 @@ jobs:
       contract: MyContract
       args: ["Hello from Web3 DevOps!"]
 
+  - name: Smoke Test Deployed Contract
+    uses: actions/smoke_test@v1
+    with:
+      network: localhost
+      contract: MyContract
+      address: ${{ jobs.Deploy to Localhost.output.address }}
+      calls:
+        - method: greet
+          expected: "Hello from Web3 DevOps!"
+
   - name: Verify Contract
     uses: actions/verify@v1
     with:
+      network: localhost
+      contract: MyContract
+      address: ${{ jobs.Deploy to Localhost.output.address }}
+      args: ["Hello from Web3 DevOps!"]
+
+  - name: Export ABI and Types
+    uses: actions/export_abi@v1
+    with:
+      contract: MyContract
+      destination: exports
+      network: localhost
+      address: ${{ jobs.Deploy to Localhost.output.address }}
+      typescript: true
+
+  - name: Send Notification
+    uses: actions/notify@v1
+    continue-on-error: true
+    with:
+      title: "🚀 Deployment Succeeded"
       network: localhost
       contract: MyContract
       address: ${{ jobs.Deploy to Localhost.output.address }}

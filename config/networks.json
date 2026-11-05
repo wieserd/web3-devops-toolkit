@@ -3,9 +3,34 @@
     "rpc_url": "http://127.0.0.1:8545",
     "chain_id": 31337
   },
-  "goerli": {
-    "rpc_url": "https://goerli.infura.io/v3/YOUR_INFURA_PROJECT_ID",
-    "chain_id": 5,
+  "sepolia": {
+    "rpc_url": "https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID",
+    "chain_id": 11155111,
+    "etherscan_api_key": "YOUR_ETHERSCAN_API_KEY"
+  },
+  "arbitrum-sepolia": {
+    "rpc_url": "https://sepolia-rollup.arbitrum.io/rpc",
+    "chain_id": 421614,
+    "etherscan_api_key": "YOUR_ARBISCAN_API_KEY"
+  },
+  "optimism-sepolia": {
+    "rpc_url": "https://sepolia.optimism.io",
+    "chain_id": 11155420,
+    "etherscan_api_key": "YOUR_OPTIMISM_ETHERSCAN_KEY"
+  },
+  "base-sepolia": {
+    "rpc_url": "https://sepolia.base.org",
+    "chain_id": 84532,
+    "etherscan_api_key": "YOUR_BASESCAN_API_KEY"
+  },
+  "polygon-amoy": {
+    "rpc_url": "https://rpc-amoy.polygon.technology",
+    "chain_id": 80002,
+    "etherscan_api_key": "YOUR_POLYGONSCAN_API_KEY"
+  },
+  "mainnet": {
+    "rpc_url": "https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID",
+    "chain_id": 1,
     "etherscan_api_key": "YOUR_ETHERSCAN_API_KEY"
   }
 }

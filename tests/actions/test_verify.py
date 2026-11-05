@@ -5,6 +5,7 @@ import subprocess
 from unittest.mock import patch, MagicMock, mock_open
 
 from src.actions.verify import verify_contract, _clean_env
+from src.actions.common import get_contracts_dir
 
 # Mock networks.json content
 MOCK_NETWORKS_CONTENT = {
@@ -27,7 +28,27 @@ def test_verify_contract_success_with_address_param(mock_run):
 
     mock_run.assert_called_once_with(
         ["npx", "hardhat", "verify", "--network", "localhost", "0xabcdef"],
-        cwd="/Users/dw2022/web3-devops-toolkit/contracts",
+        cwd=get_contracts_dir(),
+        capture_output=True,
+        text=True,
+        check=True,
+        env=expected_env
+    )
+    assert result == {'status': 'success'}
+
+@patch('subprocess.run')
+def test_verify_contract_with_constructor_args(mock_run):
+    mock_run.return_value = MagicMock(stdout="Verification successful", stderr="", returncode=0)
+    params = {'network': 'localhost', 'contract': 'MyContract', 'address': '0xabcdef', 'args': ['Arg1', 123]}
+    deployed_contracts = {}
+    result = verify_contract(params, "/mock/pipeline/path/pipeline.yaml", deployed_contracts, networks_config=MOCK_NETWORKS_CONTENT)
+
+    expected_env = _clean_env(os.environ.copy())
+    expected_env["ETHERSCAN_API_KEY"] = "mock_etherscan_key"
+
+    mock_run.assert_called_once_with(
+        ["npx", "hardhat", "verify", "--network", "localhost", "0xabcdef", "Arg1", "123"],
+        cwd=get_contracts_dir(),
         capture_output=True,
         text=True,
         check=True,
@@ -47,7 +68,27 @@ def test_verify_contract_success_with_deployed_contracts(mock_run):
 
     mock_run.assert_called_once_with(
         ["npx", "hardhat", "verify", "--network", "localhost", "0xabcdef"],
-        cwd="/Users/dw2022/web3-devops-toolkit/contracts",
+        cwd=get_contracts_dir(),
+        capture_output=True,
+        text=True,
+        check=True,
+        env=expected_env
+    )
+    assert result == {'status': 'success'}
+
+@patch('subprocess.run')
+def test_verify_contract_with_constructor_args(mock_run):
+    mock_run.return_value = MagicMock(stdout="Verification successful", stderr="", returncode=0)
+    params = {'network': 'localhost', 'contract': 'MyContract', 'address': '0xabcdef', 'args': ['Arg1', 123]}
+    deployed_contracts = {}
+    result = verify_contract(params, "/mock/pipeline/path/pipeline.yaml", deployed_contracts, networks_config=MOCK_NETWORKS_CONTENT)
+
+    expected_env = _clean_env(os.environ.copy())
+    expected_env["ETHERSCAN_API_KEY"] = "mock_etherscan_key"
+
+    mock_run.assert_called_once_with(
+        ["npx", "hardhat", "verify", "--network", "localhost", "0xabcdef", "Arg1", "123"],
+        cwd=get_contracts_dir(),
         capture_output=True,
         text=True,
         check=True,

@@ -5,6 +5,7 @@ import subprocess
 from unittest.mock import patch, MagicMock, mock_open
 
 from src.actions.deploy import deploy_contract, _clean_env
+from src.actions.common import get_contracts_dir
 
 # Mock networks.json content
 MOCK_NETWORKS_CONTENT = {
@@ -22,11 +23,13 @@ def test_deploy_contract_success(mock_run):
     result = deploy_contract(params, "/mock/pipeline/path/pipeline.yaml", deployed_contracts, networks_config=MOCK_NETWORKS_CONTENT)
 
     expected_env = _clean_env(os.environ.copy())
+    expected_env["CONTRACT_NAME"] = "MyContract"
+    expected_env["CONTRACT_ARGS"] = json.dumps(["Hello"])
     expected_env["INITIAL_GREETING"] = "Hello"
 
     mock_run.assert_called_once_with(
         ["npx", "hardhat", "run", "scripts/deploy.js", "--network", "localhost"],
-        cwd="/Users/dw2022/web3-devops-toolkit/contracts",
+        cwd=get_contracts_dir(),
         capture_output=True,
         text=True,
         check=True,
@@ -34,6 +37,15 @@ def test_deploy_contract_success(mock_run):
     )
     assert result == {'status': 'success', 'address': '0x1234567890123456789012345678901234567890'}
     assert deployed_contracts['MyContract'] == '0x1234567890123456789012345678901234567890'
+
+@patch('subprocess.run')
+def test_deploy_custom_contract_name_regex(mock_run):
+    mock_run.return_value = MagicMock(stdout="CustomToken deployed to 0xabcdefabcdefabcdefabcdefabcdefabcdefabcd", stderr="", returncode=0)
+    params = {'network': 'localhost', 'contract': 'CustomToken', 'args': []}
+    deployed_contracts = {}
+    result = deploy_contract(params, "/mock/pipeline/path/pipeline.yaml", deployed_contracts, networks_config=MOCK_NETWORKS_CONTENT)
+    assert result == {'status': 'success', 'address': '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd'}
+    assert deployed_contracts['CustomToken'] == '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd'
 
 @patch('subprocess.run')
 def test_deploy_contract_failure(mock_run):

@@ -104,5 +104,98 @@ jobs:
             runner.run()
             # Verify that the address for verification is None or not set due to failed deploy
             assert runner.job_outputs['Test Deploy Failed']['status'] == 'failure'
+
+def test_pipeline_runner_validation(tmp_path):
+    valid_file = tmp_path / "valid.yaml"
+    valid_file.write_text("""
+name: Valid
+jobs:
+  - name: Compile
+    uses: actions/compile@v1
+""")
+    runner = PipelineRunner(str(valid_file))
+    is_valid, errors = runner.validate()
+    assert is_valid is True
+    assert len(errors) == 0
+
+    invalid_file = tmp_path / "invalid.yaml"
+    invalid_file.write_text("""
+name: Invalid
+jobs:
+  - name: Unknown Action
+    uses: actions/nonexistent@v1
+""")
+    runner_invalid = PipelineRunner(str(invalid_file))
+    is_valid, errors = runner_invalid.validate()
+    assert is_valid is False
+    assert len(errors) == 1
+
+def test_pipeline_runner_dry_run(tmp_path):
+    pipeline_file = tmp_path / "pipeline.yaml"
+    pipeline_file.write_text("""
+name: Dry Run Pipeline
+jobs:
+  - name: Job1
+    uses: actions/compile@v1
+""")
+    runner = PipelineRunner(str(pipeline_file), dry_run=True)
+    success = runner.run()
+    assert success is True
+    assert runner.job_outputs['Job1'] == {'status': 'dry_run_success'}
+
+def test_pipeline_runner_manifest_export(tmp_path):
+    pipeline_file = tmp_path / "pipeline.yaml"
+    pipeline_file.write_text("""
+name: Manifest Pipeline
+jobs: []
+""")
+    manifest_out = tmp_path / "deployments.json"
+    runner = PipelineRunner(str(pipeline_file), manifest_path=str(manifest_out))
+    runner.run()
+    assert manifest_out.exists()
+    data = json.loads(manifest_out.read_text())
+    assert data['pipeline'] == 'Manifest Pipeline'
+
+def test_pipeline_runner_conditions_failure_and_always(tmp_path):
+    pipeline_file = tmp_path / "conditional_pipeline.yaml"
+    pipeline_file.write_text("""
+name: Conditional Pipeline
+jobs:
+  - name: FailingJob
+    uses: actions/compile@v1
+    with:
+      tool: unknown_failing_tool
+
+  - name: SuccessJob
+    uses: actions/compile@v1
+    if: success()
+    with:
+      tool: hardhat
+
+  - name: FailureAlertJob
+    uses: actions/notify@v1
+    if: failure()
+    with:
+      title: "Pipeline Failed Alert"
+
+  - name: AlwaysCleanupJob
+    uses: actions/notify@v1
+    if: always()
+    with:
+      title: "Always Ran"
+""")
+    runner = PipelineRunner(str(pipeline_file))
+    success = runner.run()
+    assert success is False
+    # Failing job ran and failed
+    assert runner.job_outputs['FailingJob']['status'] == 'failure'
+    # Success job was skipped because previous job failed
+    assert runner.job_outputs['SuccessJob']['status'] == 'skipped'
+    # Failure job ran
+    assert runner.job_outputs['FailureAlertJob']['status'] == 'success'
+    # Always job ran
+    assert runner.job_outputs['AlwaysCleanupJob']['status'] == 'success'
+
+
             # The verify action should have been called with address=None or similar
             # (depending on how verify_contract handles None address)

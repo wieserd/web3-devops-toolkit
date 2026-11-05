@@ -19,6 +19,16 @@ then
     exit 1
 fi
 
+# Python environment setup (create/use venv if not already in one)
+if [ -z "$VIRTUAL_ENV" ]; then
+    if [ ! -d ".venv" ]; then
+        echo "Creating Python virtual environment (.venv)..."
+        python3 -m venv .venv
+    fi
+    echo "Activating virtual environment..."
+    source .venv/bin/activate
+fi
+
 # Install Python dependencies
 echo "Installing Python dependencies..."
 pip install -r requirements.txt
@@ -30,6 +40,6 @@ echo "Installing Node.js dependencies for contracts..."
 echo "Setup complete. Running example pipeline..."
 
 # Run the example pipeline
-./src/cli.py run-pipeline --pipeline ./pipelines/example_pipeline.yaml
+python3 src/cli.py run-pipeline --pipeline ./pipelines/example_pipeline.yaml
 
 echo "Web3 DevOps Toolkit finished."
