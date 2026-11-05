@@ -38,7 +38,7 @@ function loadNetworks() {
 module.exports = {
   solidity: "0.8.20",
   paths: {
-    sources: "./",
+    sources: "./contracts",
     artifacts: "../artifacts",
     cache: "../cache"
   },

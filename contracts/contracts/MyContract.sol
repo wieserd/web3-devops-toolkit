@@ -11,4 +11,8 @@ contract MyContract {
     function setGreeting(string memory _newGreeting) public {
         greeting = _newGreeting;
     }
+
+    function greet() public view returns (string memory) {
+        return greeting;
+    }
 }

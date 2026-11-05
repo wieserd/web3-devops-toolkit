@@ -309,7 +309,10 @@ web3-devops-toolkit/
 ├── config/                  # Network RPC and chain configs
 │   └── networks.json
 ├── contracts/               # Smart contracts and Hardhat/Foundry workspace
-│   ├── MyContract.sol
+│   ├── contracts/
+│   │   └── MyContract.sol
+│   ├── test/
+│   │   └── MyContract.test.js
 │   ├── package.json
 │   └── hardhat.config.js    # Dynamically loads config/networks.json
 ├── scripts/                 # Universal deployment scripts
