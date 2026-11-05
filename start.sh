@@ -36,6 +36,7 @@ pip install -r requirements.txt
 # Install Node.js dependencies for contracts
 echo "Installing Node.js dependencies for contracts..."
 (cd contracts && npm install)
+ln -sf ../contracts/node_modules scripts/node_modules
 
 echo "Setup complete. Running example pipeline..."
 

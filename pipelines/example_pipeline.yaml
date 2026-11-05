@@ -30,11 +30,13 @@ jobs:
 
   - name: Verify Contract
     uses: actions/verify@v1
+    continue-on-error: true
     with:
       network: localhost
       contract: MyContract
       address: ${{ jobs.Deploy to Localhost.output.address }}
       args: ["Hello from Web3 DevOps!"]
+      skip_local: true
 
   - name: Export ABI and Types
     uses: actions/export_abi@v1

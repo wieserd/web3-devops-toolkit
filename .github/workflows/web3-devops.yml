@@ -24,7 +24,9 @@ jobs:
 
       - name: Install Contract Dependencies
         working-directory: ./contracts
-        run: npm ci
+        run: |
+          npm ci
+          ln -sf ../contracts/node_modules ../scripts/node_modules
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -55,7 +57,9 @@ jobs:
 
       - name: Install Contract Dependencies
         working-directory: ./contracts
-        run: npm ci
+        run: |
+          npm ci
+          ln -sf ../contracts/node_modules ../scripts/node_modules
 
       - name: Run Smart Contract Unit Tests
         working-directory: ./contracts
@@ -90,7 +94,9 @@ jobs:
 
       - name: Install Contract Dependencies
         working-directory: ./contracts
-        run: npm ci
+        run: |
+          npm ci
+          ln -sf ../contracts/node_modules ../scripts/node_modules
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -105,9 +111,18 @@ jobs:
         working-directory: ./contracts
         run: |
           npx hardhat node &
-          sleep 4
+          for i in {1..30}; do
+            if curl -s -X POST --data '{"jsonrpc":"2.0","method":"net_version","params":[],"id":1}' -H "Content-Type: application/json" http://127.0.0.1:8545 > /dev/null; then
+              echo "Hardhat local node is ready!"
+              break
+            fi
+            echo "Waiting for Hardhat node to start..."
+            sleep 1
+          done
 
       - name: Execute DevOps Pipeline
+        env:
+          NODE_PATH: ${{ github.workspace }}/contracts/node_modules
         run: |
           python3 src/cli.py run-pipeline \
             --pipeline pipelines/example_pipeline.yaml \

@@ -8,6 +8,7 @@ def verify_contract(params, pipeline_path, deployed_contracts, networks_config=N
     contract = params.get('contract')
     address = params.get('address')  # This will come from the pipeline output or direct param
     args = params.get('args', [])
+    skip_local = params.get('skip_local', False)
     contracts_dir = get_contracts_dir(params)
 
     print(f"  [⚙️] Verifying {contract} on {network}...")
@@ -18,6 +19,11 @@ def verify_contract(params, pipeline_path, deployed_contracts, networks_config=N
         if not address:
             print(f"  [❌] No contract address provided or found for {contract} to verify.")
             return {'status': 'failure', 'error': 'No address to verify'}
+
+    # If skip_local is explicitly enabled, skip on local test networks
+    if skip_local and network and network.lower() in ("localhost", "hardhat", "anvil", "127.0.0.1"):
+        print(f"  [ℹ️] Skipping block explorer verification for local network '{network}' (skip_local=True).")
+        return {'status': 'success', 'skipped': True, 'reason': 'Local network does not require explorer verification'}
 
     # Load network configuration
     if networks_config is None:

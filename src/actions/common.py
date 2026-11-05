@@ -12,7 +12,8 @@ def get_contracts_dir(params=None):
 
 def clean_env(env):
     """
-    Remove pytest-specific and other volatile environment variables.
+    Remove pytest-specific and other volatile environment variables,
+    while preserving necessary NODE_PATH and application variables.
     """
     keys_to_remove = [
         k for k in env if k.startswith('PYTEST_') or k.startswith('TERM_') or k.startswith('SHLVL') or
@@ -20,11 +21,26 @@ def clean_env(env):
         k.startswith('HOMEBREW_') or k.startswith('INFOPATH') or k.startswith('DISPLAY') or
         k.startswith('npm_') or k.startswith('XPC_') or k.startswith('__CF_') or k.startswith('SSH_') or
         k.startswith('LOGNAME') or k.startswith('USER') or k.startswith('TMPDIR') or k.startswith('SHELL') or
-        k.startswith('INIT_CWD') or k.startswith('NODE') or k.startswith('COLOR') or k.startswith('LANG') or
+        k.startswith('INIT_CWD') or k == 'NODE_OPTIONS' or k == 'NODE_REPL_HISTORY' or k.startswith('COLOR') or k.startswith('LANG') or
         k.startswith('EDITOR') or k.startswith('__CFBundleIdentifier') or
         k.startswith('OBJC_DISABLE_INITIALIZE_FORK_SAFETY') or k.startswith('__PYVENV_LAUNCHER__') or
         k.startswith('__VIRTUAL_ENV__') or k.startswith('VIRTUAL_ENV')
     ]
     for key in keys_to_remove:
         env.pop(key, None)
+    return env
+
+def prepare_hardhat_env(contracts_dir, base_env=None):
+    """
+    Cleans environment and injects NODE_PATH to resolve packages from contracts/node_modules.
+    """
+    env = os.environ.copy() if base_env is None else base_env.copy()
+    env = clean_env(env)
+    node_modules = os.path.join(contracts_dir, "node_modules")
+    existing_node_path = env.get("NODE_PATH")
+    if existing_node_path:
+        env["NODE_PATH"] = f"{node_modules}:{existing_node_path}"
+    else:
+        env["NODE_PATH"] = node_modules
+    env["CI"] = "true"
     return env
